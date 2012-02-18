@@ -193,8 +193,8 @@ global  SMTPname FromEmailID ToEmailID;
 					setpref('Internet','E_mail',from);
 					sendmail(to,topic);
 				case 2
-					from= ;
-					to =;
+					from= FromEmailID ;
+					to = ToEmailID; 
 					setpref('Internet','E_mail',from);
 					sendmail(to,topic);
 				case 3
