@@ -185,7 +185,7 @@ global  SMTPname FromEmailID ToEmailID;
 					'requires at most 4 inputs');
 	end
 
-	setpref('Internet','SMTP_Server','smtp.ucsd.edu');
+	setpref('Internet','SMTP_Server',SMTPname);
 	switch nargin
 			case 1
 					from= FromEmailID ;
