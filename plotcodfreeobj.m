@@ -1,20 +1,23 @@
 classdef (ConstructOnLoad=false) plotcodfreeobj < handle
-
+% This file defines the plotcodfreeobj class to construct plotting options and then generate plots 
+% via the use of specific member functions thereof. This allows seperating the plotting from the 
+% control synthesis. Due to the nature of how the plots are to be treated (i.e all passing of the object
+% to a function is intented to be via reference to the same object), we derive this class from the  handle class. 
 	properties(SetAccess = private)
-
-		APlotPlane;
+		% set the private data members with default values where possible
+		planeToPlotOn;
 		toSaveAs;
-		xLab;
-		yLab;
+		xAxisLabel;
+		yAxisLabel;
 		tickLabVal;
 		tickLab;
 		plotTitle;
 		plotThreshold;
 		numberOfGridPts = 10;
-		az =-41.5000;
+		azimuthSet =-41.5000;
     el=74;
 		fontsize = 16;
-		alphaVal = .9;
+		alphaVal = .9; % controls transparency
 		numTicks = 5;
 		indxOfStartingTimeStep = 0;
 		numOfTimeStepsTotalTk  = 2; 
@@ -27,26 +30,26 @@ classdef (ConstructOnLoad=false) plotcodfreeobj < handle
   end % of properties setting
 
 	methods
-		function obj = plotcodfreeobj(APlotPlane, toSaveAs, xLab,yLab,plotTitle,plotThreshold,numberOfGridPts)
-			obj.APlotPlane = APlotPlane;
+		function obj = plotcodfreeobj(planeToPlotOn, toSaveAs, xAxisLabel,yAxisLabel,plotTitle,plotThreshold,numberOfGridPts)
+			obj.planeToPlotOn = planeToPlotOn;
 			obj.toSaveAs=toSaveAs;
-			obj.xLab= xLab;
-			obj.yLab = yLab;
+			obj.xAxisLabel= xAxisLabel;
+			obj.yAxisLabel = yAxisLabel;
 			obj.plotTitle = plotTitle;
 			obj.plotThreshold = plotThreshold;
 			obj.numberOfGridPts = numberOfGridPts;
 		end
 		% end fo fn plotcodfreeobj (constructor)
-		function plotAll(obj,cfObj)
+		function plotAll(obj,codfreeObj)
 		%% this function plots all the required plots given a cod free object. 
-				mainPlotterFn(obj,cfObj);
+				mainPlotterFn(obj,codfreeObj);
 				obj.plotofControlChoice();
 				obj.plotofhjberror();
 				obj.plotofcostmat();
 
 		end
 	
-		function mainPlotterFn(obj,cfObj)
+		function mainPlotterFn(obj,codfreeObj)
 
 			d=linspace(-obj.plotThreshold,obj.plotThreshold,obj.numberOfGridPts);
 			d=union(d,0);
@@ -56,7 +59,7 @@ classdef (ConstructOnLoad=false) plotcodfreeobj < handle
 			obj.tickLab= linspace((min(d)),(max(d)),obj.numTicks);
 			obj.tickLabVal = cellfun(@(x)num2str(x),num2cell(obj.tickLab),'UniformOutput',false);
 
-			cMat = arrayfun(@(x,y)obj.findcost(x,y,cfObj),obj.X,obj.Y,'UniformOutput', false);
+			cMat = arrayfun(@(x,y)obj.findcost(x,y,codfreeObj),obj.X,obj.Y,'UniformOutput', false);
 
 
 			indexplot = zeros(size(obj.X)); % control index used
@@ -91,11 +94,11 @@ classdef (ConstructOnLoad=false) plotcodfreeobj < handle
 		function plotofControlChoice(obj)
 			plotTitle = 'Plot of control choice';
 			figure;surf(obj.X,obj.Y,obj.indexplot);
-			title(plotTitle); view(obj.az,obj.el);
+			title(plotTitle); view(obj.azimuthSet,obj.el);
 			set(gca,'Ylim',[-obj.plotThreshold,obj.plotThreshold]);
 			set(gca,'Xlim',[-obj.plotThreshold,obj.plotThreshold]);
 			set(gca,'fontsize',obj.fontsize);
-			xlabel(obj.xLab,'fontsize',obj.fontsize); ylabel(obj.yLab,'fontsize',obj.fontsize);
+			xlabel(obj.xAxisLabel,'fontsize',obj.fontsize); ylabel(obj.yAxisLabel,'fontsize',obj.fontsize);
 			set(gca,'ZtickLabel',[]);
 			set(gca,'XTick',obj.tickLab);
 			set(gca,'YTick',obj.tickLab);
@@ -111,12 +114,12 @@ classdef (ConstructOnLoad=false) plotcodfreeobj < handle
 
 			plotTitle = 'Plot of quadratic  chosen';
 			figure;surf(obj.X,obj.Y,obj.quadraticindexplot);
-			title(plotTitle); view(obj.az,obj.el);
+			title(plotTitle); view(obj.azimuthSet,obj.el);
 			set(gca,'Ylim',[-obj.plotThreshold,obj.plotThreshold]);
 			set(gca,'Xlim',[-obj.plotThreshold,obj.plotThreshold]);
 	    set(gca,'fontsize',16);
 	   	alpha(obj.alphaVal);
-			xlabel(obj.xLab,'fontsize',obj.fontsize); ylabel(obj.yLab,'fontsize',obj.fontsize);
+			xlabel(obj.xAxisLabel,'fontsize',obj.fontsize); ylabel(obj.yAxisLabel,'fontsize',obj.fontsize);
 			set(gca,'ZtickLabel',[]);
 			set(gca,'XTick',obj.tickLab);
 			set(gca,'YTick',obj.tickLab);
@@ -131,12 +134,12 @@ classdef (ConstructOnLoad=false) plotcodfreeobj < handle
 
 				plotTitle = 'Plot of hjb error';
 				figure;surf(obj.X,obj.Y,obj.hjberrplot);
-				title(plotTitle); view(obj.az,obj.el);
+				title(plotTitle); view(obj.azimuthSet,obj.el);
 				set(gca,'Ylim',[-obj.plotThreshold,obj.plotThreshold]);
 				set(gca,'Xlim',[-obj.plotThreshold,obj.plotThreshold]);
 				set(gca,'fontsize',16);
 				alpha(obj.alphaVal);
-				xlabel(obj.xLab,'fontsize',obj.fontsize); ylabel(obj.yLab,'fontsize',obj.fontsize);
+				xlabel(obj.xAxisLabel,'fontsize',obj.fontsize); ylabel(obj.yAxisLabel,'fontsize',obj.fontsize);
 				set(gca,'ZtickLabel',[]);
 				set(gca,'XTick',obj.tickLab);
 				set(gca,'YTick',obj.tickLab);
@@ -151,12 +154,12 @@ classdef (ConstructOnLoad=false) plotcodfreeobj < handle
 		function plotofcostmat(obj)
 					plotTitle = 'Plot of cost funct ion';
 					figure;surf(obj.X,obj.Y,obj.costmat);
-					title(plotTitle); view(obj.az,obj.el);
+					title(plotTitle); view(obj.azimuthSet,obj.el);
 					set(gca,'Ylim',[-obj.plotThreshold,obj.plotThreshold]);
 					set(gca,'Xlim',[-obj.plotThreshold,obj.plotThreshold]);
 					set(gca,'fontsize',16);
 					alpha(obj.alphaVal);
-					xlabel(obj.xLab,'fontsize',obj.fontsize); ylabel(obj.yLab,'fontsize',obj.fontsize);
+					xlabel(obj.xAxisLabel,'fontsize',obj.fontsize); ylabel(obj.yAxisLabel,'fontsize',obj.fontsize);
 					set(gca,'ZtickLabel',[]);
 					set(gca,'XTick',obj.tickLab);
 					set(gca,'YTick',obj.tickLab);
@@ -169,7 +172,7 @@ classdef (ConstructOnLoad=false) plotcodfreeobj < handle
 			
 
 					
-		function resultvector = findcost(obj,x,y,cfObj)
+		function resultvector = findcost(obj,x,y,codfreeObj)
 
 						persistent indexusable_tk0 indexusable_tk0plus1 Ix Iy Iz IxI IIx IzI IIz IyI IIy IxIx IyIy IzIz;
 					 	
@@ -179,7 +182,7 @@ classdef (ConstructOnLoad=false) plotcodfreeobj < handle
 											%% begin: initialize ix iy etc...
 												Ix=sigmax;
 												Iy=sigmay;
-												Iz=sigmaz;
+												Iz=sigmazimuthSet;
 												I2=qo(eye(2));
 
 												IxI= tensor(Ix,I2);
@@ -228,81 +231,78 @@ classdef (ConstructOnLoad=false) plotcodfreeobj < handle
 								%% now find out the index of usable controls for t0
 								% the possible lengths of controls for obj.indxOfStartingTimeStep is found by searching for all the controls that have length atmost 
 								% that corresponding to obj.numOfTimeStepsTotalTk-obj.indxOfStartingTimeStep
-								indexusable_tk0 = find(cellfun(@(x)length(x),cfObj.controlindexBigList(1:cfObj.numAtPresent))<=obj.numOfTimeStepsTotalTk-obj.indxOfStartingTimeStep,1,'last'); 
+								indexusable_tk0 = find(cellfun(@(x)length(x),codfreeObj.controlindexBigList(1:codfreeObj.numAtPresent))...
+													<=obj.numOfTimeStepsTotalTk-obj.indxOfStartingTimeStep,1,'last'); 
 							
 								%% now find the index of controls for obj.indxOfStartingTimeStep+1
 								% the idea is the same as in the code above
-								indexusable_tk0plus1 = ...
-													find(cellfun(@(x)length(x),cfObj.controlindexBigList(1:cfObj.numAtPresent))<=obj.numOfTimeStepsTotalTk-obj.indxOfStartingTimeStep-1,1,'last'); 
+								indexusable_tk0plus1 = find(cellfun(@(x)length(x),codfreeObj.controlindexBigList(1:codfreeObj.numAtPresent))...
+												<=obj.numOfTimeStepsTotalTk-obj.indxOfStartingTimeStep-1,1,'last'); 
 						end
 
-
-						U0= expm(-1i*(obj.APlotPlane{1}*x+obj.APlotPlane{2}*y));
+						% now generate the unitary element from the x,y values given
+						U0= expm(-1i*(obj.planeToPlotOn{1}*x+obj.planeToPlotOn{2}*y));
 						% Now find V_{obj.indxOfStartingTimeStep}(u0) and V_{tk+1}(u0), V_{obj.indxOfStartingTimeStep}(utilde) 
 
 						% first V_{obj.indxOfStartingTimeStep}(u0) 
-						cost1= cellfun(@(M,N)(N*cfObj.delta + 2*cfObj.penalty*...
-												abs(real(trace(eye(4)-M*U0)))),cfObj.BList(1:indexusable_tk0),num2cell(cfObj.cValList(1:indexusable_tk0)));
+						cost1= cellfun(@(M,N)(N*codfreeObj.delta + 2*codfreeObj.penalty*...
+											abs(real(trace(eye(4)-M*U0)))),codfreeObj.BList(1:indexusable_tk0),...
+											num2cell(codfreeObj.cValList(1:indexusable_tk0)));
 						[costu0tk0,indxcontrolsigu0tk0]  = min(cost1);
 						quadraticIndex_tk0 = indxcontrolsigu0tk0;
-						indxcontrolsigu0tk0= cfObj.controlindexBigList{indxcontrolsigu0tk0}(1);% the change here is that 1 is used instead of end. 
+						indxcontrolsigu0tk0 = codfreeObj.controlindexBigList{indxcontrolsigu0tk0}(1);
 
-							% next V_{obj.indxOfStartingTimeStep+1}(u0) 
-								cost1= cellfun( @(M,N)(N*cfObj.delta + 2*cfObj.penalty*...
-											abs(real(trace(eye(4)-M*U0)))),cfObj.BList(1:indexusable_tk0plus1),num2cell(cfObj.cValList(1:indexusable_tk0plus1)));
-								[costu0tk0plus1,indxcontrolsigu0tk0plus1]  = min(cost1);
-								indxcontrolsigu0tk0plus1 = cfObj.controlindexBigList{indxcontrolsigu0tk0plus1}(1);% the change here is that 1 is used instead of end. 
+						% next V_{obj.indxOfStartingTimeStep+1}(u0) 
+						cost1= cellfun( @(M,N)(N*codfreeObj.delta + 2*codfreeObj.penalty*...
+											abs(real(trace(eye(4)-M*U0)))),codfreeObj.BList(1:indexusable_tk0plus1),...
+											num2cell(codfreeObj.cValList(1:indexusable_tk0plus1)));
+						[costu0tk0plus1,indxcontrolsigu0tk0plus1]  = min(cost1);
+						indxcontrolsigu0tk0plus1 = codfreeObj.controlindexBigList{indxcontrolsigu0tk0plus1}(1);
 
 											
-								pDV_pDt =  (costu0tk0plus1 - costu0tk0)/cfObj.delta;
-
-							%now find V_{obj.indxOfStartingTimeStep}(exp()\cdot u(obj.indxOfStartingTimeStep)) i.e. V_{obj.indxOfStartingTimeStep}(utilde)
-							if(indxcontrolsigu0tk0) %non zero optimal control
-								 tildeU = cfObj.Am{indxcontrolsigu0tk0}*U0; 
-							else
-								 tildeU = U0;
-							end
-								 cost1 = cellfun( @(M,N)(N*cfObj.delta + 2*cfObj.penalty*...
-												abs(real(trace(eye(4)-M*tildeU)))),cfObj.BList(1:indexusable_tk0),num2cell(cfObj.cValList(1:indexusable_tk0)));
-									[costutildetk0,b]  = min(cost1);% this is V_{tk0}(utilde)
-							
-						 
-						 
-					% next V_{obj.indxOfStartingTimeStep+1}(utilde) 
-					%	cost1= cellfun(@(M,N)testfn(M,N,tildeU),BList(1:indexusable_tk0plus1),num2cell(cValList(1:indexusable_tk0plus1)));
+						pDV_pDt =  (costu0tk0plus1 - costu0tk0)/codfreeObj.delta;
 						
-						cost1= cellfun(@(M,N)(N*cfObj.delta + 2*cfObj.penalty* abs(real(trace(eye(4)-M*tildeU)))),...
-											cfObj.BList(1:indexusable_tk0plus1),num2cell(cfObj.cValList(1:indexusable_tk0plus1)));
+						%now find V_{obj.indxOfStartingTimeStep}(exp()\cdot u(obj.indxOfStartingTimeStep)) 
+						%i.e. V_{obj.indxOfStartingTimeStep}(utilde)
+						if(indxcontrolsigu0tk0) %non zero optimal control
+								 tildeU = codfreeObj.Am{indxcontrolsigu0tk0}*U0; 
+						else
+								 tildeU = U0;
+						end
+						cost1 = cellfun( @(M,N)(N*codfreeObj.delta + 2*codfreeObj.penalty*...
+												abs(real(trace(eye(4)-M*tildeU)))),codfreeObj.BList(1:indexusable_tk0),...
+												num2cell(codfreeObj.cValList(1:indexusable_tk0)));
+						[costutildetk0,b]  = min(cost1);% this is V_{tk0}(utilde)
+						% next V_{obj.indxOfStartingTimeStep+1}(utilde) 
+						cost1= cellfun(@(M,N)(N*codfreeObj.delta + 2*codfreeObj.penalty* abs(real(trace(eye(4)-M*tildeU)))),...
+											codfreeObj.BList(1:indexusable_tk0plus1),num2cell(codfreeObj.cValList(1:indexusable_tk0plus1)));
 						[costutildetk0plus1,indxcontrolsigutildetk0plus1]  = min(cost1);
-						indxcontrolsigutildetk0plus1=cfObj.controlindexBigList{indxcontrolsigutildetk0plus1}(1);
+						indxcontrolsigutildetk0plus1=codfreeObj.controlindexBigList{indxcontrolsigutildetk0plus1}(1);
 									
-						DVDT = (costutildetk0plus1-costu0tk0 )/cfObj.delta;
+						DVDT = (costutildetk0plus1-costu0tk0 )/codfreeObj.delta;
 									 
-						pDV_pDx_times_Dx_Dt = (costutildetk0 - costu0tk0)/cfObj.delta;
+						pDV_pDx_times_Dx_Dt = (costutildetk0 - costu0tk0)/codfreeObj.delta;
 									 
 									 
-								if(indxcontrolsigu0tk0) %non zero optimal control
+						if(indxcontrolsigu0tk0) %if non zero optimal control
+							 grad_err = (costutildetk0-costu0tk0)/codfreeObj.delta;
+							 hjberrorNonSteadyState = codfreeObj.controlcostindexlist(indxcontrolsigu0tk0) + DVDT ;%
+							 grad_sensitive = abs(abs(grad_err)- ( codfreeObj.controlcostindexlist(indxcontrolsigu0tk0)/norm(IxIx)));
+							 ratioofhjbnorm = hjberrorNonSteadyState/( codfreeObj.controlcostindexlist(indxcontrolsigu0tk0)+ ...
+																							abs(pDV_pDt)+ abs(pDV_pDx_times_Dx_Dt) );
+								
+						else % if the optimal control turns out to be 0 i.e. to do nothing
+							 grad_err = 0;
+							 grad_sensitive = 0;
+							 hjberrorNonSteadyState=DVDT ; %pDV_pDt;
+							 ratioofhjbnorm = 1;
+						end %if non zero optimal control
 
-									 grad_err = (costutildetk0-costu0tk0)/cfObj.delta;
-									 hjberrorNonSteadyState = cfObj.controlcostindexlist(indxcontrolsigu0tk0) + DVDT ;%
-									 grad_sensitive = abs(abs(grad_err)- ( cfObj.controlcostindexlist(indxcontrolsigu0tk0)/norm(IxIx)));
-									 ratioofhjbnorm = hjberrorNonSteadyState/( cfObj.controlcostindexlist(indxcontrolsigu0tk0)+ ...
-																									abs(pDV_pDt)+ abs(pDV_pDx_times_Dx_Dt) );
-										
-								else
-									 grad_err = 0;
-									 grad_sensitive = 0;
-									 hjberrorNonSteadyState=DVDT ; %pDV_pDt;
-									 ratioofhjbnorm = 1;
-
-										
-								end
-							 
+					 
 						resultvector = {costu0tk0,indxcontrolsigu0tk0,(hjberrorNonSteadyState),...
 						norm(hjberrorNonSteadyState),grad_err, grad_sensitive,quadraticIndex_tk0,ratioofhjbnorm};
 								 
-		end
-					% end of fn findcost 
+		end	% end of fn findcost 
 						
   
 	
